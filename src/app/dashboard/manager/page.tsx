@@ -58,49 +58,7 @@ interface Employee {
   }
 }
 
-// Real-time data will be fetched from APIs
-
-// Initial activities data - will be replaced by real-time data
-const initialActivities = [
-  { id: 1, type: 'conversion', message: 'Sarah Johnson converted a lead worth ₹25,000', timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), icon: TrophyIcon, priority: 'high' },
-  { id: 2, type: 'inquiry', message: 'New inquiry from Mumbai for Web Development', timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), icon: ClipboardDocumentListIcon, priority: 'medium' },
-  { id: 3, type: 'follow-up', message: 'Mike Chen scheduled follow-up with 3 prospects', timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), icon: CalendarDaysIcon, priority: 'low' },
-  { id: 4, type: 'target', message: 'Team achieved 95% of monthly target', timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), icon: RocketLaunchIcon, priority: 'high' },
-]
-
-// Real-time activity templates for simulation
-const activityTemplates = [
-  { type: 'conversion', messages: [
-    'converted a lead worth ₹{amount}',
-    'closed a deal for ₹{amount}',
-    'successfully converted prospect to ₹{amount} deal'
-  ], icon: TrophyIcon, priority: 'high' },
-  { type: 'inquiry', messages: [
-    'received new inquiry from {city} for {service}',
-    'new lead from {city} interested in {service}',
-    'prospect from {city} inquired about {service}'
-  ], icon: ClipboardDocumentListIcon, priority: 'medium' },
-  { type: 'follow-up', messages: [
-    'scheduled follow-up with {count} prospects',
-    'completed follow-up calls with {count} leads',
-    'sent follow-up emails to {count} potential clients'
-  ], icon: CalendarDaysIcon, priority: 'low' },
-  { type: 'meeting', messages: [
-    'scheduled demo meeting with {company}',
-    'booked consultation call with {company}',
-    'arranged product presentation for {company}'
-  ], icon: CalendarDaysIcon, priority: 'medium' },
-  { type: 'proposal', messages: [
-    'sent proposal to {company} worth ₹{amount}',
-    'submitted quote for ₹{amount} to {company}',
-    'delivered project proposal to {company}'
-  ], icon: ClipboardDocumentListIcon, priority: 'medium' }
-]
-
-const employees = ['Sarah Johnson', 'Mike Chen', 'Emily Davis', 'Alex Kumar', 'Lisa Wong', 'David Brown', 'Jennifer Lee']
-const cities = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata']
-const services = ['Web Development', 'Mobile App', 'Data Science', 'Cloud Migration', 'Digital Marketing', 'UI/UX Design']
-const companies = ['TechCorp', 'StartupXYZ', 'Enterprise Ltd', 'Innovation Inc', 'Digital Solutions', 'Future Systems']
+// Real-time data will be fetched from APIs only
 
 
 export default function ManagerDashboard() {
@@ -119,6 +77,7 @@ export default function ManagerDashboard() {
   const [statusDistribution, setStatusDistribution] = useState<any[]>([])
   const [topPerformers, setTopPerformers] = useState<any[]>([])
   const [inquiries, setInquiries] = useState<any[]>([])
+  const [assignedLeads, setAssignedLeads] = useState<any[]>([])
   
   // Real-time activity state
   const [recentActivities, setRecentActivities] = useState<any[]>([])
@@ -181,6 +140,8 @@ export default function ManagerDashboard() {
   })
   const [showOtherCourse, setShowOtherCourse] = useState(false)
   const [otherCourse, setOtherCourse] = useState('')
+  const [showOtherSource, setShowOtherSource] = useState(false)
+  const [otherSource, setOtherSource] = useState('')
   
   const courseOptions = [
     'Web Development',
@@ -196,40 +157,45 @@ export default function ManagerDashboard() {
     'Other'
   ]
 
-  // Real-time activity functions
-  const generateRandomActivity = () => {
+  // Real-time activity functions - using only real data
+  const generateRealActivity = () => {
     if (inquiries.length === 0 || employees.length === 0) return null
     
-    const template = activityTemplates[Math.floor(Math.random() * activityTemplates.length)]
-    const employee = employees[Math.floor(Math.random() * employees.length)]
-    const inquiry = inquiries[Math.floor(Math.random() * inquiries.length)]
-    const city = cities[Math.floor(Math.random() * cities.length)]
-    const service = services[Math.floor(Math.random() * services.length)]
-    const company = companies[Math.floor(Math.random() * companies.length)]
-    const amount = (Math.floor(Math.random() * 100) + 20) * 1000 // 20K to 120K
-    const count = Math.floor(Math.random() * 5) + 1 // 1 to 5
-
-    let message = template.messages[Math.floor(Math.random() * template.messages.length)]
+    // Get most recent inquiry
+    const recentInquiry = inquiries[0]
+    const assignedEmployee = employees.find(emp => emp._id === recentInquiry.assignedTo?._id) || employees[0]
     
-    // Use real data when available
-    const realCity = inquiry.customerName || city
-    const realService = inquiry.courseInterest || service
-    
-    message = message
-      .replace('{amount}', amount.toLocaleString())
-      .replace('{city}', realCity)
-      .replace('{service}', realService)
-      .replace('{company}', company)
-      .replace('{count}', count.toString())
-
-    return {
-      id: Date.now() + Math.random(),
-      type: template.type,
-      message: `${employee.name} ${message}`,
-      timestamp: new Date(),
-      icon: template.icon,
-      priority: template.priority
+    // Create activity based on real inquiry data
+    if (recentInquiry.status === 'New') {
+      return {
+        id: Date.now() + Math.random(),
+        type: 'inquiry',
+        message: `New inquiry received from ${recentInquiry.customerName} for ${recentInquiry.courseInterest || 'course inquiry'}`,
+        timestamp: new Date(recentInquiry.createdAt),
+        icon: ClipboardDocumentListIcon,
+        priority: recentInquiry.priority?.toLowerCase() || 'medium'
+      }
+    } else if (recentInquiry.status === 'Converted') {
+      return {
+        id: Date.now() + Math.random(),
+        type: 'conversion',
+        message: `${assignedEmployee.name} converted inquiry from ${recentInquiry.customerName}`,
+        timestamp: new Date(recentInquiry.updatedAt || recentInquiry.createdAt),
+        icon: TrophyIcon,
+        priority: 'high'
+      }
+    } else if (recentInquiry.status === 'Contacted') {
+      return {
+        id: Date.now() + Math.random(),
+        type: 'follow-up',
+        message: `${assignedEmployee.name} contacted ${recentInquiry.customerName}`,
+        timestamp: new Date(recentInquiry.updatedAt || recentInquiry.createdAt),
+        icon: PhoneIcon,
+        priority: 'medium'
+      }
     }
+    
+    return null
   }
 
   const formatTimeAgo = (timestamp: Date) => {
@@ -258,35 +224,32 @@ export default function ManagerDashboard() {
   useEffect(() => {
     if (user?.role === 'Manager') {
       fetchDashboardData()
+      fetchAssignedLeads()
     }
   }, [user])
 
-  // Real-time activity simulation
+  // Real-time data refresh only - no simulation
   useEffect(() => {
     if (!isLive) return
 
     const interval = setInterval(() => {
-      // Generate new activity every 15-45 seconds
-      const randomDelay = Math.random() * 30000 + 15000
-      setTimeout(() => {
-        const newActivity = generateRandomActivity()
-        addNewActivity(newActivity)
-      }, randomDelay)
-    }, 30000) // Check every 30 seconds
+      // Only refresh real data, no artificial activities
+      fetchDashboardData()
+    }, 30000) // Refresh every 30 seconds
 
     return () => clearInterval(interval)
-  }, [isLive, employees])
-
-  // Real-time data refresh every 60 seconds
-  useEffect(() => {
-    if (!isLive) return
-
-    const dataRefreshInterval = setInterval(() => {
-      fetchDashboardData()
-    }, 60000) // Refresh data every 60 seconds
-
-    return () => clearInterval(dataRefreshInterval)
   }, [isLive])
+
+
+  const fetchAssignedLeads = async () => {
+    try {
+      // Fetch leads assigned to the current manager
+      const response = await inquiryApi.getMyInquiries({ limit: 100 })
+      setAssignedLeads(response.data || [])
+    } catch (error) {
+      console.error('Failed to fetch assigned leads:', error)
+    }
+  }
 
   const fetchDashboardData = async () => {
     try {
@@ -352,7 +315,7 @@ export default function ManagerDashboard() {
       
       const conversions = monthInquiries.filter(inq => inq.status === 'Converted').length
       const leads = monthInquiries.length
-      const revenue = conversions * 45000 // Estimated revenue per conversion
+      const conversionRate = leads > 0 ? (conversions / leads) * 100 : 0
       const target = Math.max(conversions, Math.ceil(leads * 0.25)) // 25% target or actual conversions
       
       monthlyData.push({
@@ -360,7 +323,7 @@ export default function ManagerDashboard() {
         leads,
         conversions,
         target,
-        revenue
+        conversionRate
       })
     }
     
@@ -395,14 +358,13 @@ export default function ManagerDashboard() {
     const performerStats = employees.map(emp => {
       const empInquiries = inquiries.filter(inq => inq.assignedTo?._id === emp._id)
       const conversions = empInquiries.filter(inq => inq.status === 'Converted').length
-      const revenue = conversions * 45000
       const conversionRate = empInquiries.length > 0 ? (conversions / empInquiries.length) * 100 : 0
       
       return {
         name: emp.name,
         conversions,
-        revenue,
-        growth: `+${Math.round(conversionRate)}%`,
+        conversionRate,
+        growth: `${Math.round(conversionRate)}%`,
         totalLeads: empInquiries.length
       }
     })
@@ -416,33 +378,51 @@ export default function ManagerDashboard() {
     setTopPerformers(topPerfs)
   }
 
-  // Initialize real-time activities from real data
+  // Initialize real-time activities from real data only
   const initializeRealTimeActivities = (inquiries: any[], employees: any[]) => {
     const activities: any[] = []
     const recentInquiries = inquiries
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5)
+      .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime())
+      .slice(0, 10)
     
     recentInquiries.forEach((inq, index) => {
       const employee = employees.find(emp => emp._id === inq.assignedTo?._id)
-      const timestamp = new Date(Date.now() - (index + 1) * 30 * 60 * 1000)
+      const timestamp = new Date(inq.updatedAt || inq.createdAt)
       
       if (inq.status === 'Converted' && employee) {
         activities.push({
-          id: Date.now() + index,
+          id: `${inq._id}-converted`,
           type: 'conversion',
-          message: `${employee.name} converted a lead worth ₹45,000`,
+          message: `${employee.name} converted inquiry from ${inq.customerName}`,
           timestamp,
           icon: TrophyIcon,
           priority: 'high'
         })
       } else if (inq.status === 'New') {
         activities.push({
-          id: Date.now() + index,
+          id: `${inq._id}-new`,
           type: 'inquiry',
           message: `New inquiry from ${inq.customerName} for ${inq.courseInterest || 'course inquiry'}`,
           timestamp,
           icon: ClipboardDocumentListIcon,
+          priority: 'medium'
+        })
+      } else if (inq.status === 'Contacted' && employee) {
+        activities.push({
+          id: `${inq._id}-contacted`,
+          type: 'follow-up',
+          message: `${employee.name} contacted ${inq.customerName}`,
+          timestamp,
+          icon: PhoneIcon,
+          priority: 'medium'
+        })
+      } else if (inq.status === 'Interested' && employee) {
+        activities.push({
+          id: `${inq._id}-interested`,
+          type: 'follow-up',
+          message: `${inq.customerName} showed interest - assigned to ${employee.name}`,
+          timestamp,
+          icon: SparklesIcon,
           priority: 'medium'
         })
       }
@@ -488,6 +468,8 @@ export default function ManagerDashboard() {
         })
         setShowOtherCourse(false)
         setOtherCourse('')
+        setShowOtherSource(false)
+        setOtherSource('')
         fetchDashboardData() // Refresh data
         alert('Inquiry added successfully!')
       }
@@ -736,7 +718,7 @@ export default function ManagerDashboard() {
                 <p className="text-blue-100 text-sm">Active Team Members</p>
                 <div className="flex items-center mt-2 text-xs">
                   <ArrowUpIcon className="h-3 w-3 mr-1" />
-                  <span>+2 this month</span>
+                  <span>{stats.totalCounsellors} active</span>
                 </div>
               </div>
             </div>
@@ -744,7 +726,7 @@ export default function ManagerDashboard() {
 
           <div 
             className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-2xl"
-            onClick={() => window.location.href = '/dashboard/leads'}
+            onClick={() => window.location.href = '/dashboard/inquiries'}
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
             <div className="relative">
@@ -778,7 +760,7 @@ export default function ManagerDashboard() {
                 <p className="text-amber-100 text-sm">Conversions</p>
                 <div className="flex items-center mt-2 text-xs">
                   <TrophyIcon className="h-3 w-3 mr-1" />
-                  <span>₹1.2M revenue</span>
+                  <span>{stats.totalConversions} total conversions</span>
                 </div>
               </div>
             </div>
@@ -799,7 +781,7 @@ export default function ManagerDashboard() {
                 <p className="text-purple-100 text-sm">Conversion Rate</p>
                 <div className="flex items-center mt-2 text-xs">
                   <SparklesIcon className="h-3 w-3 mr-1" />
-                  <span>+5.2% vs last month</span>
+                  <span>{stats.totalConversions} conversions</span>
                 </div>
               </div>
             </div>
@@ -902,6 +884,123 @@ export default function ManagerDashboard() {
                 </div>
               </div>
             </div>
+        </div>
+
+        {/* Assigned Leads Section */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <ClipboardDocumentListIcon className="h-5 w-5 mr-2 text-blue-600" />
+              My Assigned Leads
+              <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                {assignedLeads.length}
+              </span>
+            </h3>
+            <Button 
+              onClick={() => window.location.href = '/dashboard/inquiries'}
+              variant="outline" 
+              className="text-sm"
+            >
+              View All
+            </Button>
+          </div>
+          
+          {assignedLeads.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Contact
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Priority
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Course
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Created
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {assignedLeads.slice(0, 5).map((lead) => {
+                    const getStatusColor = (status: string) => {
+                      switch (status) {
+                        case 'New': return 'bg-blue-100 text-blue-800'
+                        case 'Contacted': return 'bg-yellow-100 text-yellow-800'
+                        case 'Interested': return 'bg-green-100 text-green-800'
+                        case 'Follow Up': return 'bg-purple-100 text-purple-800'
+                        case 'Converted': return 'bg-green-100 text-green-800'
+                        case 'Lost': return 'bg-red-100 text-red-800'
+                        default: return 'bg-gray-100 text-gray-800'
+                      }
+                    }
+                    
+                    const getPriorityColor = (priority: string) => {
+                      switch (priority) {
+                        case 'Urgent': return 'bg-red-100 text-red-800'
+                        case 'High': return 'bg-orange-100 text-orange-800'
+                        case 'Medium': return 'bg-yellow-100 text-yellow-800'
+                        case 'Low': return 'bg-gray-100 text-gray-800'
+                        default: return 'bg-gray-100 text-gray-800'
+                      }
+                    }
+                    
+                    return (
+                      <tr key={lead._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{lead.customerName}</div>
+                            <div className="text-sm text-gray-500">{lead.inquiryId || lead._id.slice(-6)}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm text-gray-900">{lead.email}</div>
+                            <div className="text-sm text-gray-500">{lead.phone}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(lead.status)}`}>
+                            {lead.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(lead.priority)}`}>
+                            {lead.priority}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {lead.courseInterested || lead.courseInterest || 'Not specified'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(lead.createdAt).toLocaleDateString('en-IN', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <ClipboardDocumentListIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No leads assigned to you yet.</p>
+              <p className="text-sm text-gray-400 mt-1">Leads assigned to you will appear here.</p>
+            </div>
+          )}
         </div>
 
         {/* Enhanced Charts Section */}
@@ -1013,8 +1112,8 @@ export default function ManagerDashboard() {
 
       {/* Add Employee Modal */}
       {showAddEmployee && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 pt-8">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto mt-4">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Employee</h3>
             <form onSubmit={handleAddEmployee} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1245,8 +1344,8 @@ export default function ManagerDashboard() {
 
       {/* Add Inquiry Modal */}
       {showAddInquiry && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-8">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[85vh] overflow-y-auto mt-4">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Inquiry</h3>
             {/* Mode Toggle */}
             <div className="mb-4 inline-flex rounded-md shadow-sm border border-gray-200 overflow-hidden">
@@ -1307,7 +1406,14 @@ export default function ManagerDashboard() {
                       <label className="block text-sm font-medium text-gray-700">Source</label>
                       <select
                         value={newInquiry.source}
-                        onChange={(e) => setNewInquiry({...newInquiry, source: e.target.value})}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setNewInquiry({...newInquiry, source: value})
+                          setShowOtherSource(value === 'Other')
+                          if (value !== 'Other') {
+                            setOtherSource('')
+                          }
+                        }}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                       >
                         <option value="Website">Website</option>
@@ -1319,6 +1425,18 @@ export default function ManagerDashboard() {
                         <option value="Advertisement">Advertisement</option>
                         <option value="Other">Other</option>
                       </select>
+                      {showOtherSource && (
+                        <input
+                          type="text"
+                          placeholder="Please specify other source"
+                          value={otherSource}
+                          onChange={(e) => {
+                            setOtherSource(e.target.value)
+                            setNewInquiry({...newInquiry, source: e.target.value})
+                          }}
+                          className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1353,7 +1471,13 @@ export default function ManagerDashboard() {
                         type="tel"
                         required
                         value={newInquiry.phone}
-                        onChange={(e) => setNewInquiry({...newInquiry, phone: e.target.value})}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 10)
+                          setNewInquiry({...newInquiry, phone: value})
+                        }}
+                        placeholder="Enter 10-digit phone number"
+                        maxLength={10}
+                        pattern="[0-9]{10}"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                       />
                     </div>
@@ -1362,7 +1486,13 @@ export default function ManagerDashboard() {
                       <input
                         type="tel"
                         value={newInquiry.alternatePhone}
-                        onChange={(e) => setNewInquiry({...newInquiry, alternatePhone: e.target.value})}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 10)
+                          setNewInquiry({...newInquiry, alternatePhone: value})
+                        }}
+                        placeholder="Enter 10-digit phone number"
+                        maxLength={10}
+                        pattern="[0-9]{10}"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                       />
                     </div>
@@ -1507,15 +1637,6 @@ export default function ManagerDashboard() {
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                       />
                     </div>
-                  </div>
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700">Message</label>
-                    <textarea
-                      rows={3}
-                      value={newInquiry.message}
-                      onChange={(e) => setNewInquiry({...newInquiry, message: e.target.value})}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                    />
                   </div>
                   <div className="mt-4">
                     <label className="block text-sm font-medium text-gray-700">Manager Remarks</label>

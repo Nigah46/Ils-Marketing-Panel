@@ -64,7 +64,7 @@ export default function MyLeads({ className = '' }: MyLeadsProps) {
   })
 
   useEffect(() => {
-    if (user?.role === 'Employee') {
+    if (user?.role === 'Employee' || user?.role === 'Manager') {
       fetchMyLeads()
     }
   }, [user, filters])

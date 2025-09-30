@@ -256,7 +256,7 @@ export default function Dashboard() {
           conversionRate,
           totalCounsellors,
           activeEmployees,
-          monthlyRevenue: converted * 45000, // Estimated revenue based on conversions
+          monthlyRevenue: 0, // No revenue tracking in system
           avgResponseTime: calculateAvgResponseTime(inquiriesResponse.data)
         })
       } else if (user?.role === 'Employee') {
@@ -283,7 +283,7 @@ export default function Dashboard() {
           conversionRate,
           totalCounsellors: 0,
           activeEmployees: 1, // Just the current user
-          monthlyRevenue: converted * 45000, // Estimated revenue based on conversions
+          monthlyRevenue: 0, // No revenue tracking in system
           avgResponseTime: calculateAvgResponseTime(response.data)
         })
       }
@@ -329,7 +329,7 @@ export default function Dashboard() {
     setPerformanceData(counts.map(c => ({
       ...c,
       conversions: c.sales,
-      revenue: c.sales * 45000 // Estimated revenue per conversion
+      revenue: 0 // No revenue tracking in system
     })))
   }
 
@@ -430,9 +430,8 @@ export default function Dashboard() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Leads</p>
               <p className="text-2xl font-bold text-gray-900">{stats.totalLeads}</p>
-              <p className="text-sm text-green-600 flex items-center">
-                <ArrowUpIcon className="h-4 w-4 mr-1" />
-                +12% from last month
+              <p className="text-sm text-gray-600">
+                Total inquiries in system
               </p>
             </div>
           </div>
@@ -446,9 +445,8 @@ export default function Dashboard() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">New Leads</p>
               <p className="text-2xl font-bold text-gray-900">{stats.newLeads}</p>
-              <p className="text-sm text-green-600 flex items-center">
-                <ArrowUpIcon className="h-4 w-4 mr-1" />
-                +8% from last week
+              <p className="text-sm text-blue-600">
+                Requiring attention
               </p>
             </div>
           </div>
@@ -462,9 +460,8 @@ export default function Dashboard() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Conversions</p>
               <p className="text-2xl font-bold text-gray-900">{stats.converted}</p>
-              <p className="text-sm text-green-600 flex items-center">
-                <ArrowUpIcon className="h-4 w-4 mr-1" />
-                +15% from last month
+              <p className="text-sm text-green-600">
+                Successfully converted
               </p>
             </div>
           </div>
@@ -594,8 +591,8 @@ export default function Dashboard() {
                 )}
               </div>
               
-              {/* Logout Button - Only for Employees */}
-              {user?.role === 'Employee' && (
+              {/* Logout Button - For Employees and Managers */}
+              {(user?.role === 'Employee' || user?.role === 'Manager') && (
                 <button
                   onClick={handleLogout}
                   className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
@@ -683,14 +680,14 @@ export default function Dashboard() {
             <div className="relative">
               <div className="flex items-center justify-between mb-4">
                 <CurrencyIconSolid className="h-8 w-8 text-white/90" />
-                <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">Revenue</span>
+                <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">Sales</span>
               </div>
               <div>
-                <p className="text-3xl font-bold mb-1">₹{(stats.monthlyRevenue / 100000).toFixed(1)}L</p>
-                <p className="text-amber-100 text-sm">This Month</p>
+                <p className="text-3xl font-bold mb-1">{stats.converted}</p>
+                <p className="text-amber-100 text-sm">Total Conversions</p>
                 <div className="flex items-center mt-2 text-xs">
                   <ArrowUpIcon className="h-3 w-3 mr-1" />
-                  <span>+{((stats.monthlyRevenue / 850000) * 100).toFixed(0)}% growth</span>
+                  <span>Based on conversions</span>
                 </div>
               </div>
             </div>
